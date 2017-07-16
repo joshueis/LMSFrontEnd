@@ -1,0 +1,1071 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>GCIT LMS</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/style.css"/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+		<script src="js/data.js"></script>
+		<script src="js/main.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet" />
+		<script src="js/moment.js"></script>
+
+	</head>
+	<body ng-app="lmsApp">
+		<div class="container">
+			<div class="jumbotron">
+				<h2>GCIT Library Management System</h2>
+			</div>
+			<nav>
+				<ul class="nav nav-pills" role="tablist">
+					<li role="presentation" ng-class="{active:mc.currentTab == 1.0}"><a
+																						ng-click="mc.currentTab = 1.0">Librarian</a></li>
+					<li role="presentation" ng-class="{active:mc.currentTab == 2.0}"><a
+																						ng-click="mc.currentTab = 2.0">Borrower</a></li>
+					<li role="presentation" ng-class="{active:mc.currentTab == 3.0}"><a
+																						ng-click="mc.currentTab = 3.0">Administrator</a></li>
+				</ul>
+			</nav>
+
+			<div class="panel well" ng-if="mc.currentTab == null">
+				<h2>Welcome back! Please choose your type of user.</h2>
+			</div>
+			<div ng-controller="libController as lc" ng-if="mc.currentTab == 1.0">
+				<div class="panel well" ng-if="lc.currentTab == null">
+					<h2>Hello Librarian!</h2>
+					<h3 style="display: inline;">Please select your library branch:</h3>
+					<button type="button" style="margin-bottom: 10px;"
+							class="btn btn-info btn-lg" data-toggle="modal"
+							data-target="#myModal" ng-click="lc.getLibBranches()">Branches</button>
+				</div>
+				<div class="modal fade" id="myModal" role="dialog">
+					<div class="modal-dialog">
+						<!-- Modal content-->
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal">&times;</button>
+								<h4 class="modal-title">List of branches</h4>
+							</div>
+							<div class="modal-body" ng-repeat="(key,data) in lc.libBranches">
+								<span>{{data.branchName}}
+									<button data-dismiss="modal" style="float: right;" type="button" class="btn"
+											ng-click="lc.sBranch = lc.libBranches[key]; lc.currentTab=1.1;">
+										Select</button>
+								</span>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-default"
+										data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div style="font-size: 15px;" class="panel well row"
+					 ng-if="lc.currentTab == 1.1" ng-init="lc.xEd()">
+					<div class="col-md-6">
+						<div class="panel panel-default">
+							<!-- Default panel contents -->
+							<div class="panel-heading">Branch Information</div>
+							<ul class="list-group">
+								<li class="list-group-item"><a id="brName">{{lc.sBranch.branchName}}</a></li>
+								<li class="list-group-item"><a id="brAddr">{{lc.sBranch.branchAddress}}</a></li>
+							</ul>
+						</div>
+					</div>
+					<div ng-init="lc.getBooks()" class="col-md-6">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="panel panel-default">
+									<div class="panel-heading">Current Book Stock</div>
+									<ul class="list-group">
+										<li class="list-group-item">
+											<div class="form-group">
+												<select ng-model="lc.sBook"
+														ng-options="b.title for b in lc.books"
+														ng-change="lc.modCopies()" class="form-control" id="sel1">
+												</select>
+											</div>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div style="margin-top: 52px;" class="input-group col-md-3">
+								<span class="input-group-btn">
+									<button type="button" disabled ng-click="lc.modCopies('minus')"
+											class="btn btn-default btn-number" data-type="minus" id='mButt'>
+										<span class="glyphicon glyphicon-minus"></span>
+									</button>
+								</span> <input disabled id="copies" ng-model="lc.sBook.noOfCopies"
+											   type="number" name="quant[1]" class="form-control input-number"
+											   min="{{lc.sBook.minVal}}"> <span class="input-group-btn">
+								<button type="button" ng-click="lc.modCopies('plus')"
+										class="btn btn-default btn-number" data-type="plus">
+									<span class="glyphicon glyphicon-plus"></span>
+								</button>
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-controller="borController as bc" ng-if="mc.currentTab == 2.0">
+				<div class="panel well" ng-if="bc.currentTab == null">
+					<div id="borLogin" class="input-group input-group-lg">
+						<span class="input-group-addon" id="basic-addon3">Please
+							enter your Card Number</span> <input ng-change="bc.setValid()"
+																 id='cardNo' type="number" ng-model="bc.borrower.cardNo" min="0"
+																 class="form-control" aria-describedby="basic-addon3"> <span
+																															 class="input-group-btn">
+						<button class="btn btn-secondary" type="button"
+								ng-click="bc.valCardNo()">Login</button>
+						</span>
+					</div>
+				</div>
+
+				<div class="panel well" ng-if="bc.currentTab == 2.1">
+					<h2>Welcome Back {{bc.borrower.name}}!</h2>
+
+					<div ng-init="bc.complete=false" class="form-group row">
+						<div class="col-md-3">
+							<button type="button" class="btn btn-success btn-lg" style="width:100%"
+									data-toggle="modal" data-target="#myModal2"
+									ng-click="bc.showBranch=false;bc.showBooks=false;bc.complete=false;bc.getLoans()">View
+								Current Loans</button>
+						</div>
+						<div class="col-md-3">
+							<button type="button" style="width:100%" ng-if="!bc.complete"
+									class="btn btn-primary btn-lg"
+									ng-click="bc.showBranch = true; bc.getLibBranches()">Checkout
+								a book</button>
+							<button type="button" ng-if="bc.complete"
+									class="btn btn-info btn-lg" style="width:100%"
+									ng-click="bc.bookCheckout(); bc.showBranch=false; bc.showBooks=false; bc.complete=false">Complete Checkout</button>
+						</div>
+						<div class="col-md-3">
+							<select ng-if="bc.showBranch"
+									ng-change="bc.showBooks=true;bc.getBooks()"
+									ng-options="br.branchName for br in bc.libBranches"
+									ng-model="bc.sBranch" class="form-control input-lg">
+								<option disabled value="" style="color: gray;" selected>Select
+									a Branch..</option>
+							</select>
+						</div>
+						<div class="col-md-3">
+							<select ng-if="bc.showBooks" ng-change="bc.complete = true"
+									ng-model="bc.sBook" ng-options="bk.title for bk in bc.books"
+									class="form-control input-lg">
+								<option disabled value="" style="color: gray;" selected>Select
+									a Book..</option>
+							</select>
+						</div>
+					</div>
+					<div class="modal fade" id="myModal2" role="dialog">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Current Loans</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Book Title</th>
+												<th>Library Branch</th>
+												<th>Date Checked Out</th>
+												<th>Due Date</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in bc.loans">
+											<tr>
+												<td class="vert-aligned">{{data.book.title}}</td>
+												<td class="vert-aligned">{{data.branch.branchName}}</td>
+												<td class="vert-aligned">{{data.dateOut}}</td>
+												<td class="vert-aligned">{{data.dueDate}}</td>
+												<td><button class="btn btn-primary"
+															ng-click="bc.bookReturn(key)">Return</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div ng-controller="adminController as ac"
+				 ng-if="mc.currentTab == 3.0">
+				<div class="panel well" ng-if="ac.currentTab == null">
+					<h2>Hello Administrator! Choose an option.</h2>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;"
+							ng-click="ac.showBooks = !ac.showBooks">
+							Books <span style="float: right;" class="glyphicon"
+										ng-class="{'glyphicon-triangle-bottom': !ac.showBooks, 'glyphicon-triangle-top': ac.showBooks}"></span>
+						</h2>
+						<div class="row" ng-if="ac.showBooks">
+							<div style="text-align: center" class="row">
+								<div class="col-md-4 btn-success" data-toggle="modal"
+									 data-target="#addModal" ng-click="ac.getAuthors();">
+									<h2>Add</h2>
+								</div>
+								<div class="col-md-4 btn-warning" data-toggle="modal"
+									 data-target="#upModal" ng-click="ac.getBooks();">
+									<h2>Update</h2>
+								</div>
+								<div class="col-md-4 btn-danger" data-toggle="modal"
+									 data-target="#delModal" ng-click="ac.getBooks(true);">
+									<h2>Delete</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;"
+							ng-click="ac.showAuthors = !ac.showAuthors">
+							Authors <span style="float: right;" class="glyphicon"
+										  ng-class="{'glyphicon-triangle-bottom': !ac.showAuthors, 'glyphicon-triangle-top': ac.showAuthors}"></span>
+						</h2>
+						<div class="row" ng-if="ac.showAuthors">
+							<div style="text-align: center" class="row">
+								<div class="col-md-4 btn-success" data-toggle="modal"
+									 data-target="#2addModal" ng-click="ac.getBooks();">
+									<h2>Add</h2>
+								</div>
+								<div class="col-md-4 btn-warning" data-toggle="modal" data-target="#2upModal" ng-click="ac.getAuthors();">
+									<h2>Update</h2>
+								</div>
+								<div class="col-md-4 btn-danger" data-toggle="modal" data-target="#2delModal" ng-click="ac.getAuthors();">
+									<h2>Delete</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;"
+							ng-click="ac.showPublishers = !ac.showPublishers">
+							Publishers <span style="float: right;" class="glyphicon"
+											 ng-class="{'glyphicon-triangle-bottom': !ac.showPublishers, 'glyphicon-triangle-top': ac.showPublishers}"></span>
+						</h2>
+						<div class="row" ng-if="ac.showPublishers">
+							<div style="text-align: center" class="row">
+								<div class="col-md-4 btn-success" data-toggle="modal" data-target="#3addModal">
+									<h2>Add</h2>
+								</div>
+								<div class="col-md-4 btn-warning" data-toggle="modal" data-target="#3upModal" ng-click="ac.getPublishers()">
+									<h2>Update</h2>
+								</div>
+								<div class="col-md-4 btn-danger" data-toggle="modal" data-target="#3delModal" ng-click="ac.getPublishers();">
+									<h2>Delete</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;"
+							ng-click="ac.showBranches = !ac.showBranches">
+							Library Branches <span style="float: right;" class="glyphicon"
+												   ng-class="{'glyphicon-triangle-bottom': !ac.showBranches, 'glyphicon-triangle-top': ac.showBranches}"></span>
+						</h2>
+						<div class="row" ng-if="ac.showBranches">
+							<div style="text-align: center" class="row">
+								<div class="col-md-4 btn-success" data-toggle="modal" data-target="#4addModal">
+									<h2>Add</h2>
+								</div>
+								<div class="col-md-4 btn-warning" data-toggle="modal" data-target="#4upModal" ng-click="ac.getLibBranches()">
+									<h2>Update</h2>
+								</div>
+								<div class="col-md-4 btn-danger" data-toggle="modal" data-target="#4delModal" ng-click="ac.getLibBranches();">
+									<h2>Delete</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;"
+							ng-click="ac.showBorrowers = !ac.showBorrowers">
+							Borrowers <span style="float: right;" class="glyphicon"
+											ng-class="{'glyphicon-triangle-bottom': !ac.showBorrowers, 'glyphicon-triangle-top': ac.showBorrowers}"></span>
+						</h2>
+						<div class="row" ng-if="ac.showBorrowers">
+							<div style="text-align: center" class="row">
+								<div class="col-md-4 btn-success" data-toggle="modal" data-target="#5addModal">
+									<h2>Add</h2>
+								</div>
+								<div class="col-md-4 btn-warning" data-toggle="modal" data-target="#5upModal" ng-click="ac.getBorrowers()">
+									<h2>Update</h2>
+								</div>
+								<div class="col-md-4 btn-danger" data-toggle="modal" data-target="#5delModal" ng-click="ac.getBorrowers();">
+									<h2>Delete</h2>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="panel well adminPanel btn-default">
+						<h2 style="margin-bottom: 16px;" data-toggle="modal"
+							data-target="#loanModal" ng-click="ac.getLoans()">Loans</h2>
+					</div>
+					<!--MODALS BEGIN -->
+					<!--ADD MODAL 1 -->
+					<div class="modal fade" id="addModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Add a New Book</h4>
+								</div>
+								<div class="modal-body">
+									<form class="form-horizontal" ng-submit="ac.addBook()">
+										<div class="form-group" ng-repeat="element in ac.bookElements">
+											<input type="{{element.type}}" class="form-control"
+												   id="{{element.id}}" placeholder="{{element.placeholder}}"
+												   ng-model="ac.bookTitle" ng-required="{{element.required}}">
+										</div>
+										<div class="form-group">
+											<select style="width:100%" id="authors" multiple ng-model="ac.sAuthors">
+												<option ng-repeat="(key,data) in ac.authors" value="{{data}}">{{data.authorName}}</option>
+											</select>
+										</div>
+										<div class="form-group">
+											<select style="width:100%" id="genres" multiple ng-model="ac.sGenres">
+												<option ng-repeat="(key,data) in ac.genres" value="{{data}}">{{data.genreName}}</option>
+											</select>
+										</div>
+										<div class="form-group">
+											<select class="form-control" ng-model="ac.sPublisher"
+													ng-options="p.publisherName for p in ac.publishers"
+													class="form-control">
+												<option value="" style="color: lightgray;" selected>Publisher</option>
+											</select>
+										</div>
+										<div class="form-group">
+											<button style="float: right" class="btn btn-md btn-success"
+													type="submit">Add</button>
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--ADD MODAL 2-->
+					<div class="modal fade" id="2addModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Add a New Author</h4>
+								</div>
+								<div class="modal-body">
+									<form class="form-horizontal" ng-submit="ac.addAuthor()">
+										<div class="form-group" ng-repeat="element in ac.authorElements">
+											<input type="{{element.type}}" class="form-control"
+												   id="{{element.id}}" placeholder="{{element.placeholder}}"
+												   ng-model="ac.authorName" ng-required="{{element.required}}">
+										</div>
+										<div class="form-group">
+											<select style="width:100%" id="books" multiple ng-model="ac.sBooks">
+												<option ng-repeat="(key,data) in ac.books" value="{{data}}">{{data.title}}</option>
+											</select>
+										</div>
+										<div class="form-group">
+											<button style="float: right" class="btn btn-md btn-success"
+													type="submit">Add</button>
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--ADD MODAL 3-->
+					<div class="modal fade" id="3addModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Add a New Publisher</h4>
+								</div>
+								<div class="modal-body">
+									<form class="form-horizontal" ng-submit="ac.addPublisher()">
+										<div class="form-group" ng-repeat="element in ac.publisherElements">
+											<input ng-model="element.value"  type="{{element.type}}" class="form-control"
+												   id="{{element.id}}" placeholder="{{element.placeholder}}" ng-required="{{element.required}}">
+										</div>
+										<div class="form-group">
+											<button style="float: right" class="btn btn-md btn-success"
+													type="submit">Add</button>
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--ADD MODAL 4-->
+					<div class="modal fade" id="4addModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Add a New Library Branch</h4>
+								</div>
+								<div class="modal-body">
+									<form class="form-horizontal" ng-submit="ac.addLibBranch()">
+										<div class="form-group" ng-repeat="element in ac.branchElements">
+											<input ng-model="element.value"  type="{{element.type}}" class="form-control"
+												   id="{{element.id}}" placeholder="{{element.placeholder}}" ng-required="{{element.required}}">
+										</div>
+										<div class="form-group">
+											<button style="float: right" class="btn btn-md btn-success"
+													type="submit">Add</button>
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--ADD MODAL 5-->
+					<div class="modal fade" id="5addModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Add a New Borrower</h4>
+								</div>
+								<div class="modal-body">
+									<form class="form-horizontal" ng-submit="ac.addBorrower()">
+										<div class="form-group" ng-repeat="element in ac.borrowerElements">
+											<input ng-model="element.value"  type="{{element.type}}" class="form-control"
+												   id="{{element.id}}" placeholder="{{element.placeholder}}" ng-required="{{element.required}}">
+										</div>
+										<div class="form-group">
+											<button style="float: right" class="btn btn-md btn-success"
+													type="submit">Add</button>
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--UPDATE MODAL 1 -->
+					<div class="modal fade" id="upModal" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Select a book to update.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Book Title</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.books">
+											<tr>
+												<td class="vert-aligned">{{data.title}}</td>
+												<td><button style="float: right;"
+															class="btn btn-warning" data-toggle="modal"
+															data-target="#upModalB"
+															ng-click="ac.sBook=ac.books[key]; ac.xEd('book'); ac.xEdR('book')">Update</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="upModalB" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Click on an attribute to update
+										it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Book Title</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="vert-aligned"><a id="bTitle">{{ac.sBook.title}}</a></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--UPDATE MODAL 2 -->
+					<div class="modal fade" id="2upModal" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Select an author to update.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Author Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.authors">
+											<tr>
+												<td class="vert-aligned">{{data.authorName}}</td>
+												<td><button style="float: right;"
+															class="btn btn-warning" data-toggle="modal"
+															data-target="#2upModalB"
+															ng-click="ac.sAuthor=ac.authors[key]; ac.xEd('author'); ac.xEdR('author');">Update</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="2upModalB" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal" ng-click="ac.getAuthors()">&times;</button>
+									<h4 class="modal-title">Click on an attribute to update
+										it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Author Name</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="vert-aligned"><a id="aName">{{ac.sAuthor.authorName}}</a></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal" ng-click="ac.getAuthors()">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--UPDATE MODAL 3 -->
+					<div class="modal fade" id="3upModal" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Select a Publisher to update.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Publisher Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.publishers">
+											<tr>
+												<td class="vert-aligned">{{data.publisherName}}</td>
+												<td><button style="float: right;"
+															class="btn btn-warning" data-toggle="modal"
+															data-target="#3upModalB"
+															ng-click="ac.sPublisher=ac.publishers[key]; ac.xEd('publisher'); ac.xEdR('publisher');">Update</button></td>
+
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="3upModalB" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal" ng-click="ac.getPublishers()">&times;</button>
+									<h4 class="modal-title">Click on an attribute to update
+										it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Publisher Name</th>
+												<th>Publisher Address</th>
+												<th>Publisher Phone</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="vert-aligned">
+													<a id="pName">{{ac.sPublisher.publisherName}}</a>
+												</td>
+												<td class="vert-aligned">
+													<a id="pAddress">{{ac.sPublisher.publisherAddress}}</a>
+												</td>
+												<td class="vert-aligned">
+													<a id="pPhone">{{ac.sPublisher.publisherPhone}}</a>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal" ng-click="ac.getPublishers()">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--UPDATE MODAL 4 -->
+					<div class="modal fade" id="4upModal" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Select a Branch to Update.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Branch Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.libBranches">
+											<tr>
+												<td class="vert-aligned">{{data.branchName}}</td>
+												<td><button style="float: right;"
+															class="btn btn-warning" data-toggle="modal"
+															data-target="#4upModalB"
+															ng-click="ac.sLibBranch=ac.libBranches[key]; ac.xEd('libBranch'); ac.xEdR('libBranch');">Update</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="4upModalB" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal" ng-click="ac.getLibBranches()">&times;</button>
+									<h4 class="modal-title">Click on an attribute to update it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Branch Name</th>
+												<th>Branch Address</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="vert-aligned">
+													<a id="bName">{{ac.sLibBranch.branchName}}</a>
+												</td>
+												<td class="vert-aligned">
+													<a id="bAddress">{{ac.sLibBranch.branchAddress}}</a>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal" ng-click="ac.getLibBranches()">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--UPDATE MODAL 5 -->
+					<div class="modal fade" id="5upModal" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Select a Borrower to Update.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Borrower Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.borrowers">
+											<tr>
+												<td class="vert-aligned">{{data.name}}</td>
+												<td><button style="float: right;"
+															class="btn btn-warning" data-toggle="modal"
+															data-target="#5upModalB"
+															ng-click="ac.sBorrower=ac.borrowers[key]; ac.xEd('borrower'); ac.xEdR('borrower');">Update</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="5upModalB" role="dialog">
+						<div class="modal-dialog modal-md">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal" ng-click="ac.getBorrowers()">&times;</button>
+									<h4 class="modal-title">Click on an attribute to update it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Borrower Name</th>
+												<th>Borrower Address</th>
+												<th>Borrower Phone</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td class="vert-aligned">
+													<a id="brName">{{ac.sBorrower.name}}</a>
+												</td>
+												<td class="vert-aligned">
+													<a id="brAddress">{{ac.sBorrower.address}}</a>
+												</td>
+												<td class="vert-aligned">
+													<a id="brPhone">{{ac.sBorrower.phone}}</a>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal" ng-click="ac.getBorrowers()">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--DELETE MODAL1-->
+					<div class="modal fade" id="delModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Delete a Book.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th><input type="text" class="form-control"
+														   ng-model="ac.searchVal" placeholder="Search.."
+														   ng-change="ac.searchBooks()"></th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.chunks[ac.pgIdx]">
+											<tr>
+												<td class="vert-aligned">{{data.title}}</td>
+												<td><button class="btn btn-danger"
+															ng-click="ac.sBook=data;ac.delBook(key)">Delete</button></td>
+											</tr>
+										</tbody>
+									</table>
+									<ul style="margin: 0" class="pagination"
+										ng-repeat="(key,value) in ac.chunks">
+										<li ng-class="{'active' : key==ac.pgIdx}"><a href="#"
+																					 ng-click="ac.pgIdx = key">{{key+1}}</a></li>
+									</ul>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--DELETE MODAL 2-->
+					<div class="modal fade" id="2delModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Delete a Book.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Auhor Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.authors">
+											<tr>
+												<td class="vert-aligned">{{data.authorName}}</td>
+												<td><button class="btn btn-danger"
+															ng-click="ac.sAuthor=data;ac.delAuthor()">Delete</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--DELETE MODAL 3-->
+					<div class="modal fade" id="3delModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Delete a Publisher.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Publisher Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.publishers">
+											<tr>
+												<td class="vert-aligned">{{data.publisherName}}</td>
+												<td><button class="btn btn-danger"
+															ng-click="ac.sPublisher=data;ac.delPublisher()">Delete</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--DELETE MODAL 4-->
+					<div class="modal fade" id="4delModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Delete a Library Branch.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Branch Name</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.libBranches">
+											<tr>
+												<td class="vert-aligned">{{data.branchName}}</td>
+												<td><button class="btn btn-danger"
+															ng-click="ac.sLibBranch=data;ac.delBranch()">Delete</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--DELETE MODAL 5-->
+					<div class="modal fade" id="5delModal" role="dialog">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Delete a Borrower.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Borrower Name</th>
+												<th>Card Number</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.borrowers">
+											<tr>
+												<td class="vert-aligned">{{data.name}}</td>
+												<td class="vert-aligned">{{data.cardNo}}</td>
+												<td><button class="btn btn-danger"
+															ng-click="ac.sBorrower=data;ac.delBorrower()">Delete</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!--LOAN MODAL -->
+					<div class="modal fade" id="loanModal" role="dialog">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Override a Due Date</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Borrower Name</th>
+												<th>Branch Name</th>
+												<th>Book Title</th>
+												<th>Due Date</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody ng-repeat="(key,data) in ac.loans">
+											<tr>
+												<td class="vert-aligned">{{data.borrower.name}}</td>
+												<td class="vert-aligned">{{data.branch.branchName}}</td>
+												<td class="vert-aligned">{{data.book.title}}</td>
+												<td class="vert-aligned">{{data.dueDate}}</td>
+												<td><button class="btn btn-danger" data-toggle="modal"
+															data-target="#loanModalB" ng-click="ac.sLoan=data;ac.xEd('loan'); ac.xEdR('loan')" >Override</button></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--NESTED MODAL-->
+					<div class="modal fade" id="loanModalB" role="dialog">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" ng-click="ac.getLoans()" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">Click on the Due Date to Modify it.</h4>
+								</div>
+								<div class="modal-body">
+									<table class="table table-hover">
+										<thead>
+											<tr>
+												<th>Due Date</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td><a data-type="combodate" data-viewformat="DD/MM/YYYY" id="loanDD">{{ac.sLoan.dueDate}}</a></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default" ng-click="ac.getLoans()"
+											data-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

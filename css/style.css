@@ -1,0 +1,56 @@
+body{
+	margin-left: 15px !important;
+    background-color: #034F84;
+    font-family: "Open Sans";
+}
+
+input{
+	width: 80%;
+}
+
+form {
+	/*border:  2px double red;*/
+	margin:  2px;
+	padding:  2px;
+}
+
+."jumbotron text-center" {
+	margin:0px;
+	background-color: #303F9F !important;
+}
+
+
+
+ul.nav.nav-pills li a {
+	color:  white;
+}
+
+ul.nav.nav-pills li a:hover {
+	color:  black;
+}
+
+.modal-dialog {
+  /* margin-right: 0;*/
+   margin-top: 10% ;
+}
+
+#copies{
+	background-color: #fff;
+}
+
+#borLogin input:invalid { 
+    border: 2px solid red;
+}
+
+.table tbody > tr > td.vert-aligned {
+    vertical-align: middle;
+}
+
+.adminPanel{
+	/*background: #223A5E;
+	color:white;*/
+	border-color:darkgrey;
+	overflow:hidden;
+	padding-bottom:0;
+	padding-top:0;
+}

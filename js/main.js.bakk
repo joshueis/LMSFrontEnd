@@ -1,0 +1,20 @@
+angular.module('hello', []).controller('home', function($scope, $http) {
+
+	$scope.authors = [];
+	$http({
+		method : "get",
+		url : "getAuthors",
+	}).then(function(success) {
+		$scope.authors = success.data;
+	});
+	
+	var author = {};
+	author.authorName = "Tomas Muller";
+	$http({
+		method : "post",
+		url : "saveAuthor",
+		data : author
+	}).then(function(success) {
+		console.log("added");
+	});
+})
