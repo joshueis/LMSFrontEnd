@@ -1,5 +1,6 @@
 var lmsApp = angular.module('lmsApp', []);
 var servDomain = "http://gcitlms.ddns.net:8090/";
+//var servDomain = "http://localhost:8090/";
 
 lmsApp.controller('libController', function($scope, $http) {
 
@@ -259,7 +260,9 @@ lmsApp.controller('adminController', function($scope, $http) {
 	ac.sGenres;// multiselect values for genre
 	ac.sBooks;// multiselect values for book
 
+	//TODO: Get bookid from location header
 	ac.addBook = function() {
+		ac.getLibBranches();
 		$("#bookTitle").val("");
 		$('#addModal').modal('hide');
 		var authors;
@@ -287,8 +290,22 @@ lmsApp.controller('adminController', function($scope, $http) {
 				genres : genres,
 				publisher : publisher
 			}
+		}).then(function(success) {
+			var bookId = success.headers('Location').split('/').pop();
+			for(var i = 0; i < ac.libBranches.length; i++){
+				ac.addEntry(i, bookId);
+			}
 		});
+	}
 
+	ac.addEntry = function(branchIdx, bookId){
+		$http({
+			method : "post",
+			url : servDomain + "branches/" +  ac.libBranches[branchIdx].branchId + "/branchBooks/" + bookId,
+			data : {
+				noOfCopies : 0
+			}
+		});
 	}
 
 	ac.addAuthor = function() {
@@ -369,7 +386,7 @@ lmsApp.controller('adminController', function($scope, $http) {
 	ac.getBorrowers = function() {
 		ac.borrowers = [];
 		$http({
-			method : "post",
+			method : "get",
 			url : servDomain + "borrowers",
 		}).then(function(success) {
 			ac.borrowers = success.data;
@@ -420,7 +437,7 @@ lmsApp.controller('adminController', function($scope, $http) {
 	ac.getLoans = function() {
 		ac.loans = [];
 		$http({
-			method : "post",
+			method : "get",
 			url : servDomain + "loans",
 		}).then(function(success) {
 			var len = success.data.length;
@@ -514,7 +531,6 @@ lmsApp.controller('adminController', function($scope, $http) {
 	// x-editable code
 	ac.xEd = function(op) {
 		if (op == "book") {
-
 			$('#bTitle').editable({
 				type : 'text',
 				value : ac.sBook.title,
@@ -541,7 +557,6 @@ lmsApp.controller('adminController', function($scope, $http) {
 			});
 
 		} else if (op == "author") {
-
 			$('#aName').editable({
 				type : 'text',
 				mode : 'inline',
@@ -554,11 +569,20 @@ lmsApp.controller('adminController', function($scope, $http) {
 						return 'Title must be at least 3 characters';
 					}
 				},
+				url : servDomain + "authors/" + ac.sAuthor.authorId,
 				pk : ac.sAuthor.authorId,
-				url : 'editAuthorName'
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sAuthor);
+					delete data.authorId;
+					data.authorName = params.value;
+					return angular.toJson(data); 
+				}
 			});
 		} else if (op == "publisher") {
-
 			$('#pName').editable({
 				type : 'text',
 				mode : 'inline',
@@ -571,10 +595,19 @@ lmsApp.controller('adminController', function($scope, $http) {
 						return 'Name must be at least 3 characters';
 					}
 				},
+				url : servDomain + "publishers/" + ac.sPublisher.publisherId,
 				pk : ac.sPublisher.publisherId,
-				url : 'editPublisherName'
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sPublisher);
+					delete data.publisherId;
+					data.publisherName = params.value;
+					return angular.toJson(data); 
+				}
 			});
-
 			$('#pAddress').editable({
 				type : 'text',
 				mode : 'inline',
@@ -587,8 +620,18 @@ lmsApp.controller('adminController', function($scope, $http) {
 						return 'Address must be at least 5 characters';
 					}
 				},
+				url : servDomain + "publishers/" + ac.sPublisher.publisherId,
 				pk : ac.sPublisher.publisherId,
-				url : 'editPublisherAddress'
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sPublisher);
+					delete data.publisherId;
+					data.publisherAddress = params.value;
+					return angular.toJson(data); 
+				}
 			});
 
 			$('#pPhone').editable({
@@ -604,7 +647,17 @@ lmsApp.controller('adminController', function($scope, $http) {
 					}
 				},
 				pk : ac.sPublisher.publisherId,
-				url : 'editPublisherPhone'
+				url : servDomain + "publishers/" + ac.sPublisher.publisherId,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sPublisher);
+					delete data.publisherId;
+					data.publisherPhone = params.value;
+					return angular.toJson(data); 
+				}
 			});
 		} else if (op == "libBranch") {
 			$('#bName').editable({
@@ -620,7 +673,17 @@ lmsApp.controller('adminController', function($scope, $http) {
 					}
 				},
 				pk : ac.sLibBranch.branchId,
-				url : 'editBranchName'
+				url : servDomain + "branches/" + ac.sLibBranch.branchId,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sLibBranch);
+					delete data.branchId;
+					data.branchName = params.value;
+					return angular.toJson(data); 
+				}
 			});
 
 			$('#bAddress').editable({
@@ -636,7 +699,17 @@ lmsApp.controller('adminController', function($scope, $http) {
 					}
 				},
 				pk : ac.sLibBranch.branchId,
-				url : 'editBranchAddress'
+				url : servDomain + "branches/" + ac.sLibBranch.branchId,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sLibBranch);
+					delete data.branchId;
+					data.branchAddress = params.value;
+					return angular.toJson(data); 
+				}
 			});
 		} else if (op == "borrower") {
 			$('#brName').editable({
@@ -652,7 +725,17 @@ lmsApp.controller('adminController', function($scope, $http) {
 					}
 				},
 				pk : ac.sBorrower.cardNo,
-				url : 'editBorrowerName'
+				url : servDomain + "borrowers/" + ac.sBorrower.cardNo,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sBorrower);
+					delete data.cardNo;
+					data.name = params.value;
+					return angular.toJson(data); 
+				}
 			});
 
 			$('#brAddress').editable({
@@ -668,7 +751,17 @@ lmsApp.controller('adminController', function($scope, $http) {
 					}
 				},
 				pk : ac.sBorrower.borrowerId,
-				url : 'editBorrowerAddress'
+				url : servDomain + "borrowers/" + ac.sBorrower.cardNo,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sBorrower);
+					delete data.cardNo;
+					data.address = params.value;
+					return angular.toJson(data); 
+				}
 			});
 
 			$('#brPhone').editable({
@@ -683,8 +776,18 @@ lmsApp.controller('adminController', function($scope, $http) {
 						return 'Phone must be at least 5 characters';
 					}
 				},
-				pk : ac.sBorrower.cardNo,
-				url : 'editBorrowerPhone'
+				pk : ac.sBorrower.borrowerId,
+				url : servDomain + "borrowers/" + ac.sBorrower.cardNo,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sBorrower);
+					delete data.cardNo;
+					data.phone = params.value;
+					return angular.toJson(data); 
+				}
 			});
 		} else if (op == "loan") {
 			$('#loanDD').editable({
@@ -703,17 +806,23 @@ lmsApp.controller('adminController', function($scope, $http) {
 						return 'Date must be greater than current Due Date';
 					}
 				},
-				params : {
-					dateOut : ac.sLoan.dateOut,
-					cardNo : ac.sLoan.borrower.cardNo,
-					branchId : ac.sLoan.branch.branchId,
-					bookId : ac.sLoan.book.bookId
-				},
 				pk : '1',
-				url : 'changeDD'
+				url : servDomain + 'loans/' + ac.sLoan.borrower.cardNo +  '/' + ac.sLoan.branch.branchId + '/' + ac.sLoan.book.bookId + '/' + ac.sLoan.dateOut,
+				ajaxOptions: {
+					type: 'put',
+					contentType: 'application/json', 
+				},
+				params: function(params) {
+					var data = jQuery.extend(true,{}, ac.sLoan);
+					delete data.borrower;
+					delete data.branch;
+					delete data.book;
+					delete data.dateOut;
+					data.dueDate = params.value;
+					return angular.toJson(data); 
+				}
 			});
 		}
-
 	}
 
 	ac.xEdR = function(op) {
@@ -730,7 +839,6 @@ lmsApp.controller('adminController', function($scope, $http) {
 				.editable('option', 'pk', ac.sPublisher.publisherId);
 			$('#pPhone').editable('setValue', ac.sPublisher.publisherPhone)
 				.editable('option', 'pk', ac.sPublisher.publisherId);
-
 		} else if (op == "libBranch") {
 			$('#bName').editable('setValue', ac.sLibBranch.branchName)
 				.editable('option', 'pk', ac.sLibBranch.branchId);
@@ -745,12 +853,7 @@ lmsApp.controller('adminController', function($scope, $http) {
 				'option', 'pk', ac.sBorrower.cardNo);
 		} else if (op == "loan") {
 			$('#loanDD').editable('setValue', moment(ac.sLoan.dueDate))
-				.editable('option', 'params', {
-				dateOut : ac.sLoan.dateOut,
-				cardNo : ac.sLoan.borrower.cardNo,
-				branchId : ac.sLoan.branch.branchId,
-				bookId : ac.sLoan.book.bookId
-			}).editable('option', 'combodate', {
+				.editable('option', 'pk', '1').editable('option', 'combodate', {
 				minYear : new Date(ac.sLoan.dateOut).getFullYear(),
 				maxYear : new Date(ac.sLoan.dateOut).getFullYear() + 2
 			});
