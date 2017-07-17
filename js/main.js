@@ -825,38 +825,39 @@ lmsApp.controller('adminController', function($scope, $http) {
 		}
 	}
 
+	//TODO Fix Multiple Updates one after other
 	ac.xEdR = function(op) {
 		if (op == "book") {
 			$('#bTitle').editable('setValue', ac.sBook.title).editable(
-				'option', 'pk', ac.sBook.bookId);
+				'option', 'pk', ac.sBook.bookId).editable('option', 'url', servDomain +"books/"+ac.sBook.bookId);
 		} else if (op == "author") {
 			$('#aName').editable('setValue', ac.sAuthor.authorName).editable(
-				'option', 'pk', ac.sAuthor.authorId);
+				'option', 'pk', ac.sAuthor.authorId).editable('option', 'url', servDomain + "authors/" + ac.sAuthor.authorId);
 		} else if (op == "publisher") {
 			$('#pName').editable('setValue', ac.sPublisher.publisherName)
-				.editable('option', 'pk', ac.sPublisher.publisherId);
+				.editable('option', 'pk', ac.sPublisher.publisherId).editable('option', 'url', servDomain + "publishers/" + ac.sPublisher.publisherId);
 			$('#pAddress').editable('setValue', ac.sPublisher.publisherAddress)
-				.editable('option', 'pk', ac.sPublisher.publisherId);
+				.editable('option', 'pk', ac.sPublisher.publisherId).editable('option', 'url', servDomain + "publishers/" + ac.sPublisher.publisherId);
 			$('#pPhone').editable('setValue', ac.sPublisher.publisherPhone)
-				.editable('option', 'pk', ac.sPublisher.publisherId);
+				.editable('option', 'pk', ac.sPublisher.publisherId).editable('option', 'url', servDomain + "publishers/" + ac.sPublisher.publisherId);
 		} else if (op == "libBranch") {
 			$('#bName').editable('setValue', ac.sLibBranch.branchName)
-				.editable('option', 'pk', ac.sLibBranch.branchId);
+				.editable('option', 'pk', ac.sLibBranch.branchId).editable('option', 'url', servDomain + "branches/" + ac.sLibBranch.branchId);
 			$('#bAddress').editable('setValue', ac.sLibBranch.branchAddress)
-				.editable('option', 'pk', ac.sLibBranch.branchId);
+				.editable('option', 'pk', ac.sLibBranch.branchId).editable('option', 'url', servDomain + "branches/" + ac.sLibBranch.branchId);
 		} else if (op == "borrower") {
 			$('#brName').editable('setValue', ac.sBorrower.name).editable(
-				'option', 'pk', ac.sBorrower.cardNo);
+				'option', 'pk', ac.sBorrower.cardNo).editable('option', 'url', servDomain + "borrowers/" + ac.sBorrower.cardNo);
 			$('#brAddress').editable('setValue', ac.sBorrower.address)
-				.editable('option', 'pk', ac.sBorrower.cardNo);
+				.editable('option', 'pk', ac.sBorrower.cardNo).editable('option', 'url', servDomain + "borrowers/" + ac.sBorrower.cardNo);
 			$('#brPhone').editable('setValue', ac.sBorrower.phone).editable(
-				'option', 'pk', ac.sBorrower.cardNo);
+				'option', 'pk', ac.sBorrower.cardNo).editable('option', 'url', servDomain + "borrowers/" + ac.sBorrower.cardNo);
 		} else if (op == "loan") {
 			$('#loanDD').editable('setValue', moment(ac.sLoan.dueDate))
 				.editable('option', 'pk', '1').editable('option', 'combodate', {
 				minYear : new Date(ac.sLoan.dateOut).getFullYear(),
 				maxYear : new Date(ac.sLoan.dateOut).getFullYear() + 2
-			});
+			}).editable('option', 'url', servDomain + 'loans/' + ac.sLoan.borrower.cardNo +  '/' + ac.sLoan.branch.branchId + '/' + ac.sLoan.book.bookId + '/' + ac.sLoan.dateOut);
 		}
 
 	}
